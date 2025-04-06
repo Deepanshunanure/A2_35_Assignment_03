@@ -1,0 +1,57 @@
+pipeline {
+    agent any
+
+    environment {
+        COMPOSE_FILE = 'docker-compose.yml'
+    }
+
+    stages {
+        stage('Clone Repository') {
+            steps {
+                echo 'Cloning repository...'
+                // If using GitHub integration, Jenkins handles this automatically
+            }
+        }
+
+        stage('Build Docker Images') {
+            steps {
+                echo 'Building Docker images...'
+                sh 'docker-compose build'
+            }
+        }
+
+        stage('Run Containers') {
+            steps {
+                echo 'Starting services...'
+                sh 'docker-compose up -d'
+            }
+        }
+
+        stage('Check Running Containers') {
+            steps {
+                sh 'docker ps'
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    script {
+                        sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                        sh "docker tag flask-app deepanshu1nanure/flask-app"
+                        sh "docker tag django-app deepanshu1nanure/django-app"
+                        sh "docker push deepanshu1nanure/flask-app"
+                        sh "docker push deepanshu1nanure/django-app"
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Stopping and cleaning up containers...'
+            sh 'docker-compose down'
+        }
+    }
+}
