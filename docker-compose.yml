@@ -1,0 +1,17 @@
+version: "3.9"
+services:
+  flask:
+    build: ./flask-app
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./flask-app:/app
+    restart: always
+
+  django:
+    build: ./mydjango
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./mydjango:/app
+    restart: always
